@@ -206,6 +206,13 @@ def editOrDelete(Name):
                 with open('userinformation.txt', 'w') as writeFile:
                     writeFile.write(json.dumps(write))
                     writeFile.close()
+    if operation == "2":
+        del allUsers[Name]
+        write = allUsers
+        with open('userinformation.txt', 'w') as writeFile:
+            writeFile.write(json.dumps(write))
+            writeFile.close()
+
 
 
     pass
