@@ -1,0 +1,1 @@
+{"Mura": {"join Date": "2021-03-18", "Name": "Mura", "gender": "m", "height": "2", "weight": "62", "date of birth": "1998-04-26", "age": 22, "BMI": "15.50", "BMI range": "underweight", "BMR": "1770.96", "activity": 1.375, "TEE": "2435.07", "allergies": []}}
