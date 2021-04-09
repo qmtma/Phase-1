@@ -3,7 +3,8 @@ import os
 import csv
 import json
 import ast
-
+import random
+import matplotlib.pyplot as plt
 print("Welcome to Mini Cooking Recipe Generator and Calorie Tracking System")
 fileSize = os.path.getsize("userinformation.txt")
 if fileSize != 0:
@@ -251,7 +252,12 @@ def userValidation():
     Name = input()
     if allUsers.get(Name) == None:
         print("user does not exist")
-        userValidation()
+        print("do you want to create a new user?(y/n)")
+        select = input().lower()
+        if select == "y":
+            option1()
+        else:
+            userProfile, Name = userValidation()
     print("is this your user? (y/n)")
     print_view = allUsers.get(Name)
     PV_name = print_view.get("Name")
@@ -292,7 +298,8 @@ def userValidation():
         return Profile, Name
         pass
     elif valid == "n" or valid == "N":
-        userValidation()
+        Profile, Name = userValidation()
+        return Profile, Name
     pass
 
 
@@ -388,6 +395,264 @@ def option1():
     pass
 
 
+def option4(userProfile, Name):
+    RecipesNames = [] # recipe names for Pie chart plot
+    RecipesCals= 0
+    if Name:
+        print(f"HI {Name}")
+        RecipesFile = open(f"{Name}-recipes.txt", 'w') # f string
+        print("you can perform the following")
+        print("1. Generate recipes randomly")
+        print("2. Generate recipes randomly based on your caloric needs")
+        print("3. Generate recipes randomly based on food allergies")
+        print("4. Generate recipes randomly based on caloric needs and food allergies")
+        reciepeOP = input()
+        if reciepeOP == "1":
+            print("you can generate 4-6 recipes, how many would you like to generate?")
+            genNo = int(input())
+            if genNo in range(4, 7):
+                i = 0
+                while i < genNo:
+                    with open("recipes 2.csv") as csvFile:
+                        reciepes = csv.reader(csvFile, delimiter=';')
+                        row = random.choice(list(reciepes)) # craeting recipe list and random selection of a reciepe
+                        print(
+                            f"Recipe Name : {row[1]} \n Calories : {row[9]}\n Servings : {row[10]}\n Prep Time : {row[4]}\n "
+                            f"Cook Time : {row[5]}\n Total Time : {row[6]}\n Ingredients : {row[7]}\n Method : {row[8]}")
+                        print(f"\n do you like this recipe? (y/n)")
+                        answer = input()
+                        if answer == "y" or answer == "Y":
+                            i += 1
+                            RcName = row[1] #recipe name
+                            RcCal = row[9] #recipe calories
+                            RecipesNames.append(RcName)
+                            RecipesCals += float(RcCal)
+
+                        elif answer == "n" or answer == "N":
+                            continue
+                RecipesCals = format(RecipesCals, '.2f') #float formatting
+                averageCals = float(RecipesCals) / len(RecipesNames)
+                averageCals = format(averageCals, '.2f')
+                currentDate = datetime.datetime.today().date()
+                RecipeCsvWrite = {"Names": RecipesNames, "Total Cals": RecipesCals, "Session Date": str(currentDate),
+                                  "AVG Calories": averageCals}
+                RecipesFile.write(json.dumps(RecipeCsvWrite))
+                RecipesFile.close()
+        elif reciepeOP == "2":
+            print("you can generate 4-6 recipes, how many would you like to generate?")
+            genNo = int(input())
+            if genNo in range(4, 7):
+                i = 0
+                while i < genNo:
+                    Tee = userProfile.get("TEE")
+                    CaloricNeed = float(Tee)/genNo
+                    with open("recipes 2.csv") as csvFile:
+                        reciepes = csv.reader(csvFile, delimiter=';')
+                        row = random.choice(list(reciepes))
+                        CaloricLimit = float(row[9])/int(row[10])
+                        if CaloricLimit <= CaloricNeed:
+                            print(f"your Caloric Need is {CaloricNeed}")
+                            print(f"Calories per serving in the Following reciepe is {format(CaloricLimit,'.2f')} ")
+                            print(
+                                f"Recipe Name : {row[1]} \n Calories : {row[9]}\n Servings : {row[10]}\n Prep Time : {row[4]}\n Cook Time : {row[5]}\n Total Time : {row[6]}\n Ingredients : {row[7]}\n Method : {row[8]}")
+                            print(f"\n do you like this recipe? (y/n)")
+                            answer = input()
+                            if answer == "y" or answer == "Y":
+                                i += 1
+                                RcName = row[1]
+                                RcCal = row[9]
+                                RecipesNames.append(RcName)
+                                RecipesCals += float(RcCal)
+
+                            elif answer == "n" or answer == "N":
+                                continue
+                RecipesCals = format(RecipesCals, '.2f')
+                averageCals = float(RecipesCals) / len(RecipesNames)
+                averageCals = format(averageCals, '.2f')
+                currentDate = datetime.datetime.today().date()
+                RecipeCsvWrite = {"Names": RecipesNames, "Total Cals": RecipesCals, "Session Date": str(currentDate),
+                                  "AVG Calories": averageCals}
+                RecipesFile.write(json.dumps(RecipeCsvWrite))
+                RecipesFile.close()
+        elif reciepeOP == "3":
+            print("you can generate 4-6 recipes, how many would you like to generate?")
+            genNo = int(input())
+            if genNo in range(4, 7):
+                i = 0
+                while i < genNo:
+                    allergies = userProfile.get("allergies") # retrieve user allergies
+                    if allergies: # allergies holds a value or is not an empty list do the following
+                        print(f"your allergies are:{allergies}")
+                        with open("recipes 2.csv") as csvFile:
+                            reciepes = csv.reader(csvFile, delimiter=';')
+                            row = random.choice(list(reciepes)) # random selection for a recipe row
+                            allergicSet = set(allergies) #convert user allergies to a SET type
+                            RcIng = list(row[7]) # variable named Rcing = list(ingredients)
+                            allergicIngs = allergicSet.intersection(RcIng)
+                            if allergicIngs: # if there is any allergic reactive ingredients skip the recipe
+                                continue
+                            else: # if the recipe has no allergic ings print it out
+                                print(
+                                    f"Recipe Name : {row[1]} \n Calories : {row[9]}\n Servings : {row[10]}\n Prep Time : {row[4]}\n"
+                                    f" Cook Time : {row[5]}\n Total Time : {row[6]}\n Ingredients : {row[7]}\n Method : {row[8]}")
+                                print(f"\n do you like this recipe? (y/n)")
+                                answer = input()
+                                if answer == "y" or answer == "Y":
+                                    i += 1
+                                    RcName = row[1]
+                                    RcCal = row[9]
+                                    RecipesNames.append(RcName)
+                                    RecipesCals += float(RcCal)
+
+                                elif answer == "n" or answer == "N":
+                                    continue
+                    else:
+                        print("you dont have any allergies")
+                        break
+                RecipesCals = format(RecipesCals, '.2f')
+                averageCals = float(RecipesCals) / len(RecipesNames)
+                averageCals = format(averageCals, '.2f')
+                currentDate = datetime.datetime.today().date()
+                RecipeCsvWrite = {"Names": RecipesNames, "Total Cals": RecipesCals, "Session Date": str(currentDate),
+                                  "AVG Calories": averageCals}
+                RecipesFile.write(json.dumps(RecipeCsvWrite))
+                RecipesFile.close()
+        elif reciepeOP == "4":
+            print("you can generate 4-6 recipes, how many would you like to generate?")
+            genNo = int(input())
+            if genNo in range(4, 7):
+                i = 0
+                while i < genNo:
+                    allergies = userProfile.get("allergies")
+                    if allergies:
+                        Tee = userProfile.get("TEE")
+                        print(f"your allergies are:{allergies}")
+                        with open("recipes 2.csv") as csvFile:
+                            reciepes = csv.reader(csvFile, delimiter=';')
+                            row = random.choice(list(reciepes))
+                            allergicSet = set(allergies)
+                            RcIng = list(row[7])
+                            allergicIngs = allergicSet.intersection(RcIng)
+                            CaloricNeed = float(Tee) / genNo
+                            CaloricLimit = float(row[9]) / int(row[10])
+                            if allergicIngs:
+                                continue
+                            elif CaloricLimit <= CaloricNeed:
+                                print(f"your Caloric Need is {CaloricNeed}")
+                                print(f"Calories per serving in the Following reciepe is {CaloricLimit} ")
+                                print(
+                                    f"Recipe Name : {row[1]} \n Calories : {row[9]}\n Servings : {row[10]}\n Prep Time : {row[4]}\n Cook Time : {row[5]}\n Total Time : {row[6]}\n Ingredients : {row[7]}\n Method : {row[8]}")
+                                print(f"\n do you like this recipe? (y/n)")
+                                answer = input()
+                                if answer == "y" or answer == "Y":
+                                    i += 1
+                                    RcName = row[1]
+                                    RcCal = row[9]
+                                    RecipesNames.append(RcName)
+                                    RecipesCals += float(RcCal)
+
+                                elif answer == "n" or answer == "N":
+                                    continue
+                    else:
+                        print("you dont have any allergies")
+                        break
+                RecipesCals = format(RecipesCals, '.2f')
+                averageCals = float(RecipesCals) / len(RecipesNames)
+                averageCals = format(averageCals, '.2f')
+                currentDate = datetime.datetime.today().date()
+                RecipeCsvWrite = {"Names": RecipesNames, "Total Cals": RecipesCals, "Session Date": str(currentDate),
+                                  "AVG Calories": averageCals}
+                RecipesFile.write(json.dumps(RecipeCsvWrite))
+                RecipesFile.close()
+
+
+    else :
+        print("No User Profile Loaded")
+        userProfile, Name = userValidation()
+        option4(userProfile, Name)
+    pass
+
+
+def updateUserRecipesFile(totalUserCaloris, Names, Name):
+    with open(f"{Name}-recipes.txt", 'r') as File:
+        data = File.read()
+        dataEdit = ast.literal_eval(data)
+        dataEdit.update({"Total Cals": totalUserCaloris})
+        dataEdit.update({"AVG Calories": totalUserCaloris / len(Names)})
+        dataEdit.update({"Session Date": str(datetime.datetime.today().date())})
+        write = dataEdit
+        File.close()
+        File = open(f"{Name}-recipes.txt", 'w')
+        File.write(json.dumps(write))
+        File.close()
+    pass
+
+
+def plotCaloricPieChart(CaloriesPerRecipe, Names):
+    plt.pie(CaloriesPerRecipe, labels=Names) # list of calories per meal [50,10,20,100]
+    plt.show()
+    pass
+
+
+def option5(Profile, Name):
+    totalUserCaloris = 0
+    CaloriesPerRecipe = []
+    if Profile:
+        File = open(f"{Name}-recipes.txt", 'a')
+        File.close()
+        fileSize = os.path.getsize(f"{Name}-recipes.txt")
+        if fileSize != 0:
+            with open(f"{Name}-recipes.txt") as reciepeCsv:
+                userRecipes = reciepeCsv.read()  # reading the user recipes file
+                recipeChoice = ast.literal_eval(userRecipes) # Force convertion from I\O type to Dictionary
+                Names = recipeChoice.get("Names") #retrieving recipes Names
+                for item in Names:
+                    servings, calories , optimal_servings= RecipeValidate(item)
+                    servingCalories = float(calories)/int(optimal_servings) # calories per serving ( recipe based )
+                    UserCalories = servingCalories * servings # user servings calories
+                    servingCalories = format(servingCalories, '.2f')
+                    UserCalories = format(UserCalories, '.2f')
+                    print(f"Your total calories for Your servings is {UserCalories}\n Calories per servings is {servingCalories}")
+                    TEE = Profile.get("TEE")
+                    surplusCheck = float(TEE)/len(Names) # tee / no of meals
+                    if float(UserCalories) < surplusCheck:
+                        print("You Have a caloric deficit")
+                        print(f"------\n"*5)
+                    else:
+                        print("you have a caloric surplus")
+                        print(f"------\n"*5)
+                    totalUserCaloris += float(UserCalories) # sum of meal calories (50+10+20+100)
+                    CaloriesPerRecipe.append(UserCalories) # list of meals calories [50,10,20,100]
+                updateUserRecipesFile(totalUserCaloris, Names, Name)
+                print(f"Total Calories for this session is : {totalUserCaloris}\n Average Calories for this session : {totalUserCaloris/len(Names)}\n "
+                      f"TEE is : {TEE}")
+                if totalUserCaloris < float(TEE):
+                    print("Your are having a caloric deficit")
+                else:
+                    print("You are having a caloric surplus")
+                plotCaloricPieChart(CaloriesPerRecipe, Names)
+        else: # in case user-recipes == 0KB
+            print("you Dont have any recipe sessions")
+            print("please generate recipes")
+            option4(Profile, Name) # generate recipes
+            option5(Profile, Name) # genereate health info
+    else:
+        Profile, Name = userValidation()
+        option5(Profile, Name)
+    pass
+def RecipeValidate(item):
+    with open("recipes 2.csv") as csvFile:
+        reciepes = csv.reader(csvFile, delimiter=';')
+        for row in reciepes:
+            if item == row[1]:
+                print(
+                    f"Recipe Name : {row[1]} \n Calories : {row[9]}\n Servings : {row[10]}\n Prep Time : {row[4]}\n Cook Time : {row[5]}\n Total Time : {row[6]}\n Ingredients : {row[7]}\n Method : {row[8]}")
+                print(f"how many servings would you like to analyze thier health stats for this recipe")
+                servings = int(input())
+                return servings , row[9], row[10]
+    pass
+Profile = {}
+Name = ''
 while True:
     print("Select the number of your desired task")
     print("1. create or load a new user profile")
@@ -405,10 +670,14 @@ while True:
         elif exists == "n" or exists == "N":
             Profile = option1()  # creates user
 
-    if choice == "2":
+    elif choice == "2":
         Profile, Name = userValidation()
         option2(Name)
-    if choice == "3":
-        userValidation()
-    if choice == "6":
+    elif choice == "3":
+        Pofile, Name = userValidation()
+    elif choice == "4":
+        option4(Profile, Name)
+    elif choice == "5":
+        option5(Profile, Name)
+    elif choice == "6":
         break
